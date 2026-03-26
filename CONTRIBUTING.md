@@ -37,7 +37,7 @@ To add a section, follow the pattern in `App.jsx`:
 
 Since this app runs as a Claude artifact (not a standalone npm project), the dev loop is:
 
-1. Edit `src/App.jsx`
+1. Edit `App.jsx`
 2. Paste into a Claude conversation as a React artifact
 3. Verify it renders and Graph calls work as expected
 4. Open a PR with your changes

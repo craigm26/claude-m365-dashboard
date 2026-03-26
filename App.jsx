@@ -91,13 +91,25 @@ Return a JSON object with this exact structure:
 Only return valid JSON, no markdown.`,
 };
 
+const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+const ANTHROPIC_VERSION = "2023-06-01";
+const ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
+
+const RESPONSE_SYSTEM_PROMPT =
+  "You are generating data for an M365 health dashboard. Return JSON only and match the requested schema exactly. If an endpoint is unavailable, include an issue and set dataSource to partial or mock.";
+
 async function fetchSectionData(sectionId) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": ANTHROPIC_VERSION,
+    },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: ANTHROPIC_MODEL,
       max_tokens: 1000,
+      temperature: 0,
+      system: RESPONSE_SYSTEM_PROMPT,
       mcp_servers: [
         {
           type: "url",
@@ -108,11 +120,20 @@ async function fetchSectionData(sectionId) {
       messages: [{ role: "user", content: PROMPTS[sectionId] }],
     }),
   });
+
+  if (!response.ok) {
+    throw new Error(`Anthropic API returned ${response.status}`);
+  }
+
   const data = await response.json();
   const textBlock = data.content?.find((b) => b.type === "text");
   if (!textBlock) throw new Error("No text response from API");
   const raw = textBlock.text.replace(/```json|```/g, "").trim();
-  return JSON.parse(raw);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error("Model response was not valid JSON");
+  }
 }
 
 function ScoreRing({ score, size = 80 }) {

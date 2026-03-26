@@ -4,7 +4,7 @@
 
 ![Health Score](https://img.shields.io/badge/health_score-live-22c55e?style=flat-square)
 ![MCP](https://img.shields.io/badge/MCP-Microsoft_Graph-0ea5e9?style=flat-square)
-![Claude](https://img.shields.io/badge/Claude-Sonnet_4-6366f1?style=flat-square)
+![Claude](https://img.shields.io/badge/Claude-Sonnet-6366f1?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-slate?style=flat-square)
 
 ---
@@ -35,7 +35,7 @@ Each section returns a **health score (0–100)** and labels data as `live`, `pa
 │  │                                                      │   │
 │  │   Tab Nav → Section Panel → Score Ring + Charts      │   │
 │  │                    │                                 │   │
-│  │         fetch("api.anthropic.com/v1/messages")       │   │
+│  │      fetch("https://api.anthropic.com/v1/messages")  │   │
 │  └────────────────────┼─────────────────────────────────┘   │
 │                       │                                     │
 └───────────────────────┼─────────────────────────────────────┘
@@ -43,7 +43,7 @@ Each section returns a **health score (0–100)** and labels data as `live`, `pa
                         ▼
           ┌─────────────────────────┐
           │   Anthropic Messages    │
-          │   API (claude-sonnet-4) │
+          │   API (Claude Sonnet)   │
           │                         │
           │   mcp_servers: [        │
           │     msgraph MCP         │
@@ -104,12 +104,12 @@ Each section returns a **health score (0–100)** and labels data as `live`, `pa
 ### 2. Open the App in Claude
 
 **Option A — Paste directly:**
-1. Copy the contents of [`src/App.jsx`](./src/App.jsx)
+1. Copy the contents of [`App.jsx`](./App.jsx)
 2. Start a new Claude conversation
 3. Ask Claude: *"Run this React artifact for me"* and paste the code
 
 **Option B — Ask Claude to load from GitHub:**
-> "Load and run the React artifact from https://raw.githubusercontent.com/craigm26/claude-m365-dashboard/main/src/App.jsx"
+> "Load and run the React artifact from this repository's `App.jsx` on its default branch."
 
 ### 3. Use the Dashboard
 
@@ -166,12 +166,23 @@ Replace the `mcp_servers` URL in `fetchSectionData()` with any MCP-compatible Gr
 
 ```
 claude-m365-dashboard/
-├── src/
-│   └── App.jsx          # Full single-file React app
+├── App.jsx              # Full single-file React app
 ├── README.md
 ├── CONTRIBUTING.md
 └── LICENSE
 ```
+
+---
+
+## Anthropic API Best Practices
+
+When adapting this artifact to run outside Claude's artifact environment:
+
+- Send `anthropic-version` on every request
+- Keep your API key server-side whenever possible (avoid exposing browser keys)
+- Use deterministic settings (`temperature: 0`) for dashboard JSON responses
+- Validate and handle non-JSON or partial responses defensively
+- Pin model names in one config location so upgrades are deliberate
 
 ---
 
@@ -198,7 +209,7 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Acknowledgments
 
-Built as a response to [@TobinSouth](https://twitter.com/TobinSouth)'s challenge:
+Built as a response to [@TobinSouth](https://x.com/TobinSouth)'s challenge:
 > *"go build an interactive mcp app and dm me, we'll put it in claude"*
 
 Inspired by the friction of managing M365 tenants across PowerShell, the SharePoint admin center, and the Microsoft 365 admin portal — all at once.
