@@ -75,6 +75,12 @@ claude-m365-dashboard/
 
 No API keys to manage, no build step, no browser — it runs entirely within Claude Code.
 
+## Microsoft MCP Server Ecosystem
+
+This project uses the Microsoft Graph MCP server, one of **20+ official MCP servers** Microsoft publishes. For a complete inventory covering Azure, Graph Enterprise, Azure DevOps, Work IQ (M365), and more — including setup commands, authentication details, and integration tiers — see:
+
+**[docs/microsoft-mcp-servers.md](./docs/microsoft-mcp-servers.md)**
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
