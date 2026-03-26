@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "msgraph": {
+      "type": "url",
+      "url": "https://mcp.microsoft.com/msgraph"
+    }
+  }
+}

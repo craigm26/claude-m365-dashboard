@@ -1,32 +1,30 @@
 # Contributing to claude-m365-dashboard
 
-Thanks for your interest in contributing! This is a small, focused project — contributions that improve reliability, add new M365 sections, or improve the MCP integration are very welcome.
+Thanks for your interest in contributing! This is a small, focused project — contributions that improve reliability, add new M365 sections, or improve the report output are very welcome.
 
 ---
 
 ## Ways to Contribute
 
-### 🐛 Bug Reports
+### Bug Reports
 Open an issue with:
-- What section/tab was open
-- What Graph endpoint was being queried
-- The error message or unexpected behavior
+- What section was being queried
+- What Graph endpoint returned an error
 - Your M365 license tier (E3, E5, Business Premium, etc.) if relevant
 
-### ✨ New Dashboard Sections
+### New Report Sections
 Good candidates for new sections:
 - **Exchange Online** — mailbox sizes, shared mailbox sprawl, mail flow rules
 - **Teams** — inactive teams, guest access, channel health
 - **Intune / Endpoint** — device compliance, stale enrollments
 - **Entra ID** — MFA adoption, stale app registrations, guest users
 
-To add a section, follow the pattern in `App.jsx`:
-1. Add to `SECTIONS` array
-2. Write a Graph-querying prompt in `PROMPTS`
-3. Create a `<SectionNamePanel />` component
-4. Register in `PANELS`
+To add a section, edit `.claude/commands/m365-report.md`:
+1. Add a new numbered section with the Graph endpoints to query
+2. Describe what data to collect
+3. Add a corresponding section to the report template
 
-### 📖 Documentation
+### Documentation
 - Improve setup instructions for specific M365 configurations
 - Add troubleshooting entries for common Graph permission errors
 - Document which endpoints require which license tiers
@@ -35,27 +33,23 @@ To add a section, follow the pattern in `App.jsx`:
 
 ## Development Workflow
 
-Since this app runs as a Claude artifact (not a standalone npm project), the dev loop is:
+This project runs natively inside Claude Code — there's no build step or external app.
 
-1. Edit `App.jsx`
-2. Paste into a Claude conversation as a React artifact
-3. Verify it renders and Graph calls work as expected
+1. Edit the slash command in `.claude/commands/m365-report.md`
+2. Run `/m365-report` in Claude Code to test
+3. Verify Graph calls work and the report output is correct
 4. Open a PR with your changes
-
-There's no local build step — the artifact runs directly in Claude's sandbox.
 
 ---
 
 ## Code Style
 
-- Keep `App.jsx` as a **single file** (artifact constraint)
-- Inline styles only — no CSS files or Tailwind (artifact constraint)
-- All Graph prompts should:
-  - List the exact endpoints being called
-  - Specify the exact JSON response shape
-  - Instruct Claude to label data as `"live"`, `"partial"`, or `"mock"`
-  - End with `"Only return valid JSON, no markdown."`
-- Components should handle `undefined`/`null` data gracefully (use `?? "—"` patterns)
+- The slash command in `m365-report.md` should:
+  - List the exact Graph endpoints being called per section
+  - Describe the expected data to collect
+  - Include error handling guidance for inaccessible endpoints
+  - Maintain the markdown report template structure
+- Keep the report template clean and scannable
 
 ---
 

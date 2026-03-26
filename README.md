@@ -1,215 +1,80 @@
 # claude-m365-dashboard
 
-> An interactive Microsoft 365 tenant health dashboard powered by Claude AI + Microsoft Graph MCP — built as a Claude Interactive MCP App.
-
-![Health Score](https://img.shields.io/badge/health_score-live-22c55e?style=flat-square)
-![MCP](https://img.shields.io/badge/MCP-Microsoft_Graph-0ea5e9?style=flat-square)
-![Claude](https://img.shields.io/badge/Claude-Sonnet-6366f1?style=flat-square)
-![License](https://img.shields.io/badge/license-MIT-slate?style=flat-square)
-
----
+> Microsoft 365 tenant health reports generated natively inside Claude Code — no browser, no React, no external app.
 
 ## What It Does
 
-This app lets you inspect the health of your Microsoft 365 tenant in real time — directly inside Claude. Instead of stitching together PowerShell scripts, admin center tabs, and Excel reports, you get a single interactive dashboard that queries the **Microsoft Graph API via MCP** and surfaces actionable insights across four areas:
+Run `/m365-report` inside Claude Code to generate a full M365 tenant health report as markdown. Claude queries the **Microsoft Graph API via MCP** directly and produces a detailed report covering:
 
-| Section | What It Monitors |
+| Section | What It Checks |
 |---|---|
-| 🗂️ **SharePoint** | Site count, storage utilization, stale sites |
-| ☁️ **OneDrive** | Active vs. inactive users, sync issues, license waste |
-| ✨ **Copilot** | Adoption rate by department and app, weekly trend |
-| 🔐 **Permissions** | External sharing, orphaned permissions, risky sites |
+| SharePoint | Site count, storage utilization, stale sites |
+| OneDrive | Active vs. inactive users, sync issues, license waste |
+| Copilot | Adoption rate, usage by app |
+| Permissions | External sharing policy, public groups, risky configurations |
 
-Each section returns a **health score (0–100)** and labels data as `live`, `partial`, or `mock` based on what Graph endpoints are accessible with your account's permissions.
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Claude.ai / Claude App                  │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              React Artifact (this app)               │   │
-│  │                                                      │   │
-│  │   Tab Nav → Section Panel → Score Ring + Charts      │   │
-│  │                    │                                 │   │
-│  │      fetch("https://api.anthropic.com/v1/messages")  │   │
-│  └────────────────────┼─────────────────────────────────┘   │
-│                       │                                     │
-└───────────────────────┼─────────────────────────────────────┘
-                        │  HTTPS + Anthropic API Key
-                        ▼
-          ┌─────────────────────────┐
-          │   Anthropic Messages    │
-          │   API (Claude Sonnet)   │
-          │                         │
-          │   mcp_servers: [        │
-          │     msgraph MCP         │
-          │   ]                     │
-          └────────────┬────────────┘
-                       │  MCP Protocol
-                       ▼
-          ┌─────────────────────────┐
-          │  Microsoft Graph MCP    │
-          │  mcp.microsoft.com/     │
-          │  msgraph                │
-          └────────────┬────────────┘
-                       │  Graph API calls
-                       ▼
-          ┌─────────────────────────┐
-          │   Microsoft Graph API   │
-          │   graph.microsoft.com   │
-          │                         │
-          │  /sites                 │
-          │  /reports/...           │
-          │  /users                 │
-          │  /admin/sharepoint/...  │
-          └─────────────────────────┘
-```
-
-**How it works:**
-
-1. The React app calls the Anthropic Messages API with a structured prompt for each dashboard section
-2. The API call includes the Microsoft Graph MCP server URL
-3. Claude uses the MCP server to make live Graph API calls against your tenant
-4. Claude returns structured JSON which the app renders as charts, tables, and health scores
-5. Data source badges (`live` / `partial` / `mock`) show exactly what came from Graph vs. was estimated
-
----
+Reports are saved to `reports/` as timestamped markdown files.
 
 ## Prerequisites
 
-- **Claude.ai Pro or Team** account (for MCP connector support)
-- **Microsoft 365 tenant** with one of the following roles:
+- **Claude Code** (CLI, VS Code extension, or desktop app)
+- **Microsoft 365 tenant** with one of these roles:
   - SharePoint Administrator
   - Reports Reader
-  - Global Reader (read-only access across all sections)
-- **Microsoft Graph MCP** connected in Claude.ai Settings → Integrations
-
----
+  - Global Reader
+- **Microsoft Graph MCP** — authentication happens on first use
 
 ## Setup
 
-### 1. Connect the Microsoft Graph MCP in Claude.ai
+1. Clone this repo and open it in Claude Code:
+   ```
+   git clone https://github.com/yourusername/claude-m365-dashboard.git
+   cd claude-m365-dashboard
+   ```
 
-1. Open [claude.ai](https://claude.ai) → Settings → Integrations
-2. Add a new MCP server:
-   - **Name:** `msgraph`
-   - **URL:** `https://mcp.microsoft.com/msgraph`
-3. Authenticate with your Microsoft 365 account when prompted
-4. Confirm the integration shows as connected
+2. The Microsoft Graph MCP server is pre-configured in `.claude/settings.json`. On first use, you'll be prompted to authenticate with your Microsoft 365 account.
 
-### 2. Open the App in Claude
-
-**Option A — Paste directly:**
-1. Copy the contents of [`App.jsx`](./App.jsx)
-2. Start a new Claude conversation
-3. Ask Claude: *"Run this React artifact for me"* and paste the code
-
-**Option B — Ask Claude to load from GitHub:**
-> "Load and run the React artifact from this repository's `App.jsx` on its default branch."
-
-### 3. Use the Dashboard
-
-- The **SharePoint** tab loads automatically on first open
-- Click any tab to lazy-load that section's Graph data
-- Use the **↻** button per section or **Refresh All** in the header to re-query
-- Health scores update in the tab nav as each section loads
-
----
+3. Generate a report:
+   ```
+   /m365-report
+   ```
 
 ## Required Graph API Scopes
 
-The app queries the following endpoints. Your MCP connection must have consent for these scopes:
-
-| Endpoint | Scope Required |
+| Scope | Used For |
 |---|---|
-| `GET /sites` | `Sites.Read.All` |
-| `GET /admin/sharepoint/settings` | `SharePoint.Read.All` |
-| `GET /reports/getOneDriveUsageAccountDetail` | `Reports.Read.All` |
-| `GET /users` | `User.Read.All` |
-| `GET /reports/getMicrosoft365CopilotUsageUserDetail` | `Reports.Read.All` |
-| `GET /sites/{id}/permissions` | `Sites.FullControl.All` |
-| `GET /groups` | `Group.Read.All` |
+| `Sites.Read.All` | SharePoint site inventory |
+| `SharePoint.Read.All` | Tenant sharing/storage settings |
+| `Reports.Read.All` | OneDrive and Copilot usage reports |
+| `User.Read.All` | User sign-in activity |
+| `Group.Read.All` | M365 group visibility audit |
 
-> **Note:** If your account lacks certain scopes, the app gracefully falls back to `partial` or `mock` data and labels it clearly. You won't see errors for missing permissions — just reduced fidelity.
-
----
-
-## Customization
-
-### Add a new section
-
-1. Add an entry to the `SECTIONS` array in `App.jsx`
-2. Write a Graph-querying prompt in the `PROMPTS` object
-3. Create a new `Panel` component for rendering
-4. Register it in the `PANELS` map
-
-### Adjust health score thresholds
-
-Health score colors default to:
-- 🟢 Green: ≥ 80
-- 🟡 Amber: 60–79
-- 🔴 Red: < 60
-
-Edit the `ScoreRing` component's `color` logic to change thresholds.
-
-### Point at a different MCP server
-
-Replace the `mcp_servers` URL in `fetchSectionData()` with any MCP-compatible Graph proxy you operate internally.
-
----
+If your account lacks certain scopes, the report marks those sections as "unavailable" rather than failing.
 
 ## Project Structure
 
 ```
 claude-m365-dashboard/
-├── App.jsx              # Full single-file React app
-├── README.md
+├── .claude/
+│   ├── settings.json          # MCP server configuration
+│   └── commands/
+│       └── m365-report.md     # /m365-report slash command
+├── reports/                   # Generated reports (gitignored)
+├── CLAUDE.md                  # Project context for Claude
 ├── CONTRIBUTING.md
-└── LICENSE
+├── LICENSE
+└── README.md
 ```
 
----
+## How It Works
 
-## Anthropic API Best Practices
+1. You run `/m365-report` in Claude Code
+2. Claude reads the command template and queries Microsoft Graph endpoints via the MCP server
+3. Data is collected across all four sections, with graceful fallback for inaccessible endpoints
+4. A formatted markdown report is generated and saved to `reports/`
 
-When adapting this artifact to run outside Claude's artifact environment:
-
-- Send `anthropic-version` on every request
-- Keep your API key server-side whenever possible (avoid exposing browser keys)
-- Use deterministic settings (`temperature: 0`) for dashboard JSON responses
-- Validate and handle non-JSON or partial responses defensively
-- Pin model names in one config location so upgrades are deliberate
-
----
-
-## Limitations
-
-- Requires an active Claude.ai session with MCP connected (no standalone deploy)
-- Report endpoints (e.g. Copilot usage) require a Microsoft 365 E3/E5 or Copilot license on the tenant
-- Graph data is point-in-time; this is not a live-polling monitor
-- The Anthropic API key is handled by Claude.ai — no key management needed when running as an artifact
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
----
+No API keys to manage, no build step, no browser — it runs entirely within Claude Code.
 
 ## License
 
 MIT — see [LICENSE](./LICENSE).
-
----
-
-## Acknowledgments
-
-Built as a response to [@TobinSouth](https://x.com/TobinSouth)'s challenge:
-> *"go build an interactive mcp app and dm me, we'll put it in claude"*
-
-Inspired by the friction of managing M365 tenants across PowerShell, the SharePoint admin center, and the Microsoft 365 admin portal — all at once.
